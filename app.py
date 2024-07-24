@@ -1,40 +1,11 @@
-from flask import Flask
-
-app = Flask(__name__)
-
-@app.route('/')
-def hello_world():
-    return "Hello World!"
-
-if __name__ == '__main__':
-    app.run(debug=True)
-
-
 import os
 from flask import Flask, request, render_template
-import llamaindex
+import fitz  
 import requests
 
 app = Flask(__name__)
 
 
-gemini_api_key = os.getenv("GEMINI_API_KEY")
-
-@app.route('/')
-def index():
-    return render_template('index.html')
-
-if __name__ == '__main__':
-    app.run(debug=True)
-
-
-from flask import Flask, request, render_template
-import llamaindex
-import requests
-
-app = Flask(__name__)
-
-# Load the API key from the environment variable
 gemini_api_key = os.getenv("GEMINI_API_KEY")
 
 @app.route('/')
@@ -48,17 +19,14 @@ def query_pdf():
     file = request.files['pdf_file']
     question = request.form['question']
 
-    # Process the PDF file and prepare it for querying
+    
     pdf_text = process_pdf(file)
 
-    # Query using Gemini API
+   
     response = query_gemini(pdf_text, question)
 
-    return response['answers'][0]
-
+    return response.get('answers', ['No answer found'])[0]  
 def process_pdf(file):
-    # Example using PyMuPDF (fitz) for PDF processing
-    import fitz  # Install using `pip install PyMuPDF`
     pdf_document = fitz.open(stream=file.read(), filetype="pdf")
     text = ""
     for page_num in range(len(pdf_document)):
@@ -69,7 +37,7 @@ def process_pdf(file):
 def query_gemini(pdf_text, question):
     headers = {
         "Authorization": f"Bearer {gemini_api_key}",
-        "Content-Type": "application/json"
+        "Content-Type": "application/json"  
     }
     data = {
         "documents": [pdf_text],
